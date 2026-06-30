@@ -17,6 +17,7 @@ import TermsPage from './pages/TermsPage';
 import WorkPage from './pages/WorkPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import MerseysideSimPage from './pages/MerseysideSimPage';
 
 function LayoutWrapper() {
   const [prototypeOpen, setPrototypeOpen] = useState(false);
@@ -48,6 +49,7 @@ export default function App() {
     <BrowserRouter>
       <ScrollToTopOnRouteChange />
       <Routes>
+        <Route path="/simsig" element={<MerseysideSimPage />} />
         <Route path="/" element={<LayoutWrapper />}>
           <Route index element={<HomePage />} />
           <Route path="what-we-do" element={<Navigate to="/how-it-works" replace />} />

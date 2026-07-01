@@ -26,5 +26,10 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/:path((?!\\.well-known).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

@@ -15,7 +15,7 @@ export function stepTrain(
   dtSec: number,
   governingAspect: Aspect,
   distanceToSignalAheadMiles: number,
-  approachingPlatform: { mile: number } | null,
+  approachingStop: { mile: number } | null,
 ): Train {
   const stock = STOCK[train.stock];
   const lineLimit = speedLimitAt(train.mile);
@@ -33,9 +33,9 @@ export function stepTrain(
     }
   }
 
-  // Station stop braking — slow for the platform if approaching one.
-  if (approachingPlatform) {
-    const distToStop = Math.abs(approachingPlatform.mile - train.mile);
+  // Station stop braking — slow for the platform/stop if approaching one.
+  if (approachingStop) {
+    const distToStop = Math.abs(approachingStop.mile - train.mile);
     const brakingDistanceNeeded = (train.speedMph * train.speedMph) / (2 * stock.maxBrakeMphS * 3600);
     if (distToStop <= Math.max(brakingDistanceNeeded, 0.015)) {
       targetMph = 0;
@@ -50,7 +50,7 @@ export function stepTrain(
   }
 
   // If we're stopped and blocked by a signal/platform, hold at 0 exactly.
-  if ((mustStopForSignal || approachingPlatform) && newSpeed < 0.3 && targetMph === 0) {
+  if ((mustStopForSignal || approachingStop) && newSpeed < 0.3 && targetMph === 0) {
     newSpeed = 0;
   }
 
@@ -60,7 +60,7 @@ export function stepTrain(
   newMile = Math.max(0, Math.min(ROUTE_LENGTH_MILES + 0.05, newMile));
 
   let state: Train['state'] = 'running';
-  if (newSpeed === 0 && approachingPlatform) state = 'stopped';
+  if (newSpeed === 0 && approachingStop) state = 'stopped';
   else if (newSpeed === 0 && mustStopForSignal) state = 'stopped';
   else if (newSpeed < train.speedMph) state = 'braking';
 

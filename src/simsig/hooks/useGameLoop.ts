@@ -1,24 +1,26 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import {
   clearSave,
-  clickControlledSignal,
   clickPlatform,
+  clickSignal as clickSignalState,
   createInitialState,
   loadGame,
   reset as resetState,
   saveGame,
+  setSessionLength as setSessionLengthState,
   setSpeed as setSpeedState,
   start as startState,
   tick,
   togglePause as togglePauseState,
 } from '../engine/gameState';
-import type { GameState, SimSpeed } from '../engine/types';
+import type { GameState, SessionLengthMinutes, SimSpeed } from '../engine/types';
 
 type Action =
   | { type: 'TICK'; dt: number }
   | { type: 'START' }
   | { type: 'TOGGLE_PAUSE' }
   | { type: 'SET_SPEED'; speed: SimSpeed }
+  | { type: 'SET_SESSION_LENGTH'; minutes: SessionLengthMinutes }
   | { type: 'RESET' }
   | { type: 'CLICK_SIGNAL'; id: string }
   | { type: 'CLICK_PLATFORM'; platform: number }
@@ -34,11 +36,12 @@ function reducer(state: GameState, action: Action): GameState {
       return togglePauseState(state);
     case 'SET_SPEED':
       return setSpeedState(state, action.speed);
+    case 'SET_SESSION_LENGTH':
+      return setSessionLengthState(state, action.minutes);
     case 'RESET':
-      clearSave();
-      return resetState();
+      return resetState(state.sessionLengthMinutes);
     case 'CLICK_SIGNAL':
-      return clickControlledSignal(state, action.id);
+      return clickSignalState(state, action.id);
     case 'CLICK_PLATFORM':
       return clickPlatform(state, action.platform);
     case 'LOAD':
@@ -98,9 +101,25 @@ export function useGameLoop() {
   const start = useCallback(() => dispatch({ type: 'START' }), []);
   const togglePause = useCallback(() => dispatch({ type: 'TOGGLE_PAUSE' }), []);
   const changeSpeed = useCallback((speed: SimSpeed) => dispatch({ type: 'SET_SPEED', speed }), []);
-  const resetGame = useCallback(() => dispatch({ type: 'RESET' }), []);
+  const setSessionLength = useCallback(
+    (minutes: SessionLengthMinutes) => dispatch({ type: 'SET_SESSION_LENGTH', minutes }),
+    [],
+  );
+  const resetGame = useCallback(() => {
+    clearSave();
+    dispatch({ type: 'RESET' });
+  }, []);
   const clickSignal = useCallback((id: string) => dispatch({ type: 'CLICK_SIGNAL', id }), []);
   const selectPlatform = useCallback((platform: number) => dispatch({ type: 'CLICK_PLATFORM', platform }), []);
 
-  return { state, start, togglePause, changeSpeed, resetGame, clickSignal, selectPlatform };
+  return {
+    state,
+    start,
+    togglePause,
+    changeSpeed,
+    setSessionLength,
+    resetGame,
+    clickSignal,
+    selectPlatform,
+  };
 }

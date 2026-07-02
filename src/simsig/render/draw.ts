@@ -1,5 +1,12 @@
 import { CROSSOVERS, STATIONS, STOCK, TOTAL_PANEL_STEPS } from '../data/network';
+import { isSouthportSignal } from '../engine/signals';
 import type { GameState } from '../engine/types';
+
+function nextSignalLabel(state: GameState, stationIdx: number): string {
+  const next = STATIONS[stationIdx + 1];
+  if (!next) return 'Southport';
+  return state.signals[`sig-${next.id}-up`]?.label ?? next.short;
+}
 
 export const TRACK_Y = 130;
 export const MARGIN_LEFT = 60;
@@ -211,20 +218,49 @@ export function draw(
   });
 
   // Automatic + controlled signals
+  const pendingFromSignal = state.activeSelection ? state.signals[state.activeSelection.fromSignalId] : null;
+  const pendingIsGeneric = !!pendingFromSignal && pendingFromSignal.kind === 'controlled' && !isSouthportSignal(pendingFromSignal);
+  const pendingStationIdx = pendingIsGeneric
+    ? STATIONS.findIndex((s) => `sig-${s.id}-up` === pendingFromSignal!.id)
+    : -1;
+  const pendingExpectedExitId = pendingStationIdx >= 0 && STATIONS[pendingStationIdx + 1] ? `sig-${STATIONS[pendingStationIdx + 1].id}-up` : null;
+
   Object.values(state.signals).forEach((sig) => {
     const station = STATIONS.find((s) => `sig-${s.id}-up` === sig.id);
     if (!station) return;
+    const stationIdx = STATIONS.indexOf(station);
     const x = stationX[station.id];
     const y = SIGNAL_LANE_Y;
     const controlled = sig.kind === 'controlled';
+    const isSouthport = isSouthportSignal(sig);
     const selected = state.activeSelection?.fromSignalId === sig.id;
-    const awaitingRoute = controlled && state.southportRouteSet === null && sig.aspect === 'R';
-    drawSignalLamp(ctx, x, y, sig.aspect, controlled, selected, awaitingRoute);
+    const isExpectedExit = pendingExpectedExitId === sig.id;
+    const routeSet = isSouthport ? state.southportRouteSet !== null : !!state.routesSet[sig.id];
+    const awaitingRoute = controlled && !routeSet && sig.aspect === 'R';
+    drawSignalLamp(ctx, x, y, sig.aspect, controlled, selected || isExpectedExit, awaitingRoute);
 
     ctx.fillStyle = hoveredId === sig.id ? '#e2e8f0' : '#64748b';
     ctx.font = '9px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(sig.label, x, y + (controlled ? 24 : 18));
+
+    let tooltip: string;
+    if (isSouthport) {
+      tooltip = `${sig.label} — controlled signal, entry to Southport. Aspect: ${sig.aspect}. ${
+        state.southportRouteSet === null
+          ? 'Click to select, then click a platform to set the route.'
+          : `Route set to Platform ${state.southportRouteSet}. Click to cancel.`
+      }`;
+    } else if (controlled) {
+      const nextLabel = nextSignalLabel(state, stationIdx);
+      tooltip = `${sig.label} — controlled junction. Aspect: ${sig.aspect}. ${
+        routeSet ? `Route set through to ${nextLabel}. Click to cancel.` : `Click to select, then click ${nextLabel} to set the route.`
+      }`;
+    } else {
+      tooltip = `${sig.label} — automatic signal. Aspect: ${sig.aspect}.${
+        isExpectedExit ? ' Click to complete the pending route.' : ''
+      }`;
+    }
 
     hotspots.push({
       kind: 'signal',
@@ -233,13 +269,7 @@ export function draw(
       y: y - (controlled ? 17 : 13),
       w: controlled ? 24 : 18,
       h: controlled ? 34 : 26,
-      tooltip: controlled
-        ? `${sig.label} — controlled signal, entry to Southport. Aspect: ${sig.aspect}. ${
-            state.southportRouteSet === null
-              ? 'Click to select, then click a platform to set the route.'
-              : `Route set to Platform ${state.southportRouteSet}. Click to cancel.`
-          }`
-        : `${sig.label} — automatic signal. Aspect: ${sig.aspect}.`,
+      tooltip,
     });
   });
 
@@ -321,7 +351,14 @@ export function draw(
     ctx.fillStyle = '#475569';
     ctx.font = '9px monospace';
     ctx.textAlign = 'center';
-    const label = train.state === 'arrived' ? `${stock.name} · arrived` : `${stock.name} · ${Math.round(train.speedMph)} mph`;
+    const label =
+      train.state === 'arrived'
+        ? `${stock.name} · arrived`
+        : train.dwellUntil !== null
+          ? `${stock.name} · boarding`
+          : train.state === 'waiting'
+            ? `${stock.name} · waiting for route`
+            : `${stock.name} · ${Math.round(train.speedMph)} mph`;
     ctx.fillText(label, x, y - 22);
   });
 

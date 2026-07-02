@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { computeLayout, draw, hitTest } from '../render/draw';
 import type { Hotspot } from '../render/draw';
 import type { GameState } from '../engine/types';
+import { playSound } from '../audio/soundManager';
 
 interface TrackCanvasProps {
   state: GameState;
@@ -66,8 +67,14 @@ export default function TrackCanvas({ state, onSignalClick, onPlatformClick }: T
     const { x, y } = getCanvasCoords(e);
     const hit = hitTest(hotspotsRef.current, x, y);
     if (!hit) return;
-    if (hit.kind === 'signal') onSignalClick(hit.id);
-    if (hit.kind === 'platform') onPlatformClick(Number(hit.id.split('-')[1]));
+    if (hit.kind === 'signal') {
+      playSound('signalClick');
+      onSignalClick(hit.id);
+    }
+    if (hit.kind === 'platform') {
+      playSound('signalClick');
+      onPlatformClick(Number(hit.id.split('-')[1]));
+    }
   }
 
   function handleMouseMove(e: React.MouseEvent) {

@@ -34,33 +34,46 @@ export interface Station {
   /** Number of platforms available for terminating/allocating (Southport only, for now) */
   platforms: number;
   underground: boolean;
+  /** Passenger dwell time in seconds — longer at busy interchange stations. */
+  dwellSec: number;
 }
+
+/**
+ * Station IDs whose entry signal is a real controlled junction (the player
+ * must set a route before a train may pass) rather than a plain automatic
+ * signal. Southport is always controlled (handled separately, since it has
+ * three platforms to choose between). Sandhills Junction is deliberately
+ * left automatic for now — in reality it's where the Ormskirk/Kirkby
+ * branches and the underground core converge, which only becomes
+ * meaningful once Phase 3 adds other services to conflict with.
+ */
+export const CONTROLLED_JUNCTION_STATION_IDS: readonly string[] = ['hlr', 'for'];
 
 /** Real station order, Hunts Cross → Southport. */
 export const STATIONS: Station[] = [
-  { id: 'hc', name: 'Hunts Cross', short: 'HXC', mile: 0.0, panelIndex: 0, platforms: 1, underground: false },
-  { id: 'lsp', name: 'Liverpool South Parkway', short: 'LSP', mile: 0.83, panelIndex: 1, platforms: 1, underground: false },
-  { id: 'crs', name: 'Cressington', short: 'CRS', mile: 1.74, panelIndex: 2, platforms: 1, underground: false },
-  { id: 'agb', name: 'Aigburth', short: 'AGB', mile: 2.52, panelIndex: 3, platforms: 1, underground: false },
-  { id: 'stm', name: 'St Michaels', short: 'STM', mile: 3.82, panelIndex: 4, platforms: 1, underground: false },
-  { id: 'brw', name: 'Brunswick', short: 'BRW', mile: 4.87, panelIndex: 5, platforms: 1, underground: false },
-  { id: 'lvc', name: 'Liverpool Central', short: 'LVC', mile: 6.28, panelIndex: 6, platforms: 1, underground: true },
-  { id: 'moo', name: 'Moorfields', short: 'MOO', mile: 7.13, panelIndex: 7, platforms: 1, underground: true },
-  { id: 'san', name: 'Sandhills', short: 'SAN', mile: 8.43, panelIndex: 8, platforms: 1, underground: false },
-  { id: 'bkh', name: 'Bank Hall', short: 'BKH', mile: 9.33, panelIndex: 9, platforms: 1, underground: false },
-  { id: 'bor', name: 'Bootle Oriel Road', short: 'BOR', mile: 10.03, panelIndex: 10, platforms: 1, underground: false },
-  { id: 'bns', name: 'Bootle New Strand', short: 'BNS', mile: 10.63, panelIndex: 11, platforms: 1, underground: false },
-  { id: 'sal', name: 'Seaforth & Litherland', short: 'S&L', mile: 11.53, panelIndex: 12, platforms: 1, underground: false },
-  { id: 'wat', name: 'Waterloo', short: 'WAT', mile: 12.53, panelIndex: 13, platforms: 1, underground: false },
-  { id: 'bac', name: 'Blundellsands & Crosby', short: 'B&C', mile: 13.53, panelIndex: 14, platforms: 1, underground: false },
-  { id: 'hlr', name: 'Hall Road', short: 'HLR', mile: 14.63, panelIndex: 15, platforms: 1, underground: false },
-  { id: 'hig', name: 'Hightown', short: 'HIG', mile: 16.23, panelIndex: 16, platforms: 1, underground: false },
-  { id: 'for', name: 'Formby', short: 'FOR', mile: 18.33, panelIndex: 17, platforms: 1, underground: false },
-  { id: 'frb', name: 'Freshfield', short: 'FRB', mile: 19.73, panelIndex: 18, platforms: 1, underground: false },
-  { id: 'ain', name: 'Ainsdale', short: 'AIN', mile: 21.63, panelIndex: 19, platforms: 1, underground: false },
-  { id: 'hil', name: 'Hillside', short: 'HIL', mile: 22.83, panelIndex: 20, platforms: 1, underground: false },
-  { id: 'bir', name: 'Birkdale', short: 'BIR', mile: 23.83, panelIndex: 21, platforms: 1, underground: false },
-  { id: 'sou', name: 'Southport', short: 'SOU', mile: 25.03, panelIndex: 22, platforms: 3, underground: false },
+  { id: 'hc', name: 'Hunts Cross', short: 'HXC', mile: 0.0, panelIndex: 0, platforms: 1, underground: false, dwellSec: 40 },
+  { id: 'lsp', name: 'Liverpool South Parkway', short: 'LSP', mile: 0.83, panelIndex: 1, platforms: 1, underground: false, dwellSec: 35 },
+  { id: 'crs', name: 'Cressington', short: 'CRS', mile: 1.74, panelIndex: 2, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'agb', name: 'Aigburth', short: 'AGB', mile: 2.52, panelIndex: 3, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'stm', name: 'St Michaels', short: 'STM', mile: 3.82, panelIndex: 4, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'brw', name: 'Brunswick', short: 'BRW', mile: 4.87, panelIndex: 5, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'lvc', name: 'Liverpool Central', short: 'LVC', mile: 6.28, panelIndex: 6, platforms: 1, underground: true, dwellSec: 60 },
+  { id: 'moo', name: 'Moorfields', short: 'MOO', mile: 7.13, panelIndex: 7, platforms: 1, underground: true, dwellSec: 60 },
+  { id: 'san', name: 'Sandhills', short: 'SAN', mile: 8.43, panelIndex: 8, platforms: 1, underground: false, dwellSec: 35 },
+  { id: 'bkh', name: 'Bank Hall', short: 'BKH', mile: 9.33, panelIndex: 9, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'bor', name: 'Bootle Oriel Road', short: 'BOR', mile: 10.03, panelIndex: 10, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'bns', name: 'Bootle New Strand', short: 'BNS', mile: 10.63, panelIndex: 11, platforms: 1, underground: false, dwellSec: 35 },
+  { id: 'sal', name: 'Seaforth & Litherland', short: 'S&L', mile: 11.53, panelIndex: 12, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'wat', name: 'Waterloo', short: 'WAT', mile: 12.53, panelIndex: 13, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'bac', name: 'Blundellsands & Crosby', short: 'B&C', mile: 13.53, panelIndex: 14, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'hlr', name: 'Hall Road', short: 'HLR', mile: 14.63, panelIndex: 15, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'hig', name: 'Hightown', short: 'HIG', mile: 16.23, panelIndex: 16, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'for', name: 'Formby', short: 'FOR', mile: 18.33, panelIndex: 17, platforms: 1, underground: false, dwellSec: 35 },
+  { id: 'frb', name: 'Freshfield', short: 'FRB', mile: 19.73, panelIndex: 18, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'ain', name: 'Ainsdale', short: 'AIN', mile: 21.63, panelIndex: 19, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'hil', name: 'Hillside', short: 'HIL', mile: 22.83, panelIndex: 20, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'bir', name: 'Birkdale', short: 'BIR', mile: 23.83, panelIndex: 21, platforms: 1, underground: false, dwellSec: 30 },
+  { id: 'sou', name: 'Southport', short: 'SOU', mile: 25.03, panelIndex: 22, platforms: 3, underground: false, dwellSec: 0 },
 ];
 
 export const TOTAL_PANEL_STEPS = STATIONS.length - 1;

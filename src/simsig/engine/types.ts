@@ -37,14 +37,27 @@ export interface Train {
   direction: Direction;
   mile: number;
   speedMph: number;
-  state: 'running' | 'braking' | 'stopped' | 'arrived';
+  state: 'running' | 'braking' | 'stopped' | 'waiting' | 'arrived';
   targetPlatform: number | null;
+  /** Sim-time (seconds) the current dwell ends, or null if not dwelling. */
+  dwellUntil: number | null;
+  /** Station id of the last stop the train dwelled at, to avoid re-triggering. */
+  lastStoppedStationId: string | null;
 }
 
 export type SimSpeed = 1 | 2 | 4;
 
 export interface ActiveRouteSelection {
   fromSignalId: string;
+}
+
+export type SessionLengthMinutes = 15 | 30 | 60;
+
+export interface SessionSummary {
+  grade: 'S' | 'A' | 'B' | 'C';
+  percentComplete: number;
+  distanceMiles: number;
+  headline: string;
 }
 
 export interface GameState {
@@ -59,8 +72,14 @@ export interface GameState {
   platformOccupancy: Record<number, string | null>;
   activeSelection: ActiveRouteSelection | null;
   southportRouteSet: number | null; // platform number the approach route currently points to
+  /** Generic single-route controlled junctions (Hall Road, Formby) — signal id -> route set? */
+  routesSet: Record<string, boolean>;
   log: LogEntry[];
   phaseComplete: boolean;
+  sessionLengthMinutes: SessionLengthMinutes;
+  sessionEndsAt: number | null;
+  sessionEnded: boolean;
+  sessionSummary: SessionSummary | null;
 }
 
 export interface LogEntry {

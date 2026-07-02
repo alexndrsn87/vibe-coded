@@ -1,4 +1,4 @@
-import { STATIONS, ROUTE_LENGTH_MILES } from '../data/network';
+import { CONTROLLED_JUNCTION_STATION_IDS, STATIONS, ROUTE_LENGTH_MILES } from '../data/network';
 import type { Aspect, BlockSection, Signal } from './types';
 
 /**
@@ -40,8 +40,13 @@ export function createPlatformSections(): Record<string, BlockSection> {
 /**
  * One automatic signal per block, positioned at the start of each section
  * (i.e. at each station, protecting the road ahead to the next station).
- * The final signal before Southport (at Birkdale) is a controlled signal —
- * the player must set a route into a platform before it will clear.
+ *
+ * Most signals are automatic — they clear themselves the moment the track
+ * ahead is proved clear, exactly like plain-line 4-aspect signalling on the
+ * real railway. A handful are real controlled junctions, where the
+ * signaller must actively set a route before the signal will clear:
+ *   - Hall Road and Formby (mid-line controlled junctions)
+ *   - Birkdale, protecting the approach into Southport's three platforms
  */
 export function createSignals(): Record<string, Signal> {
   const signals: Record<string, Signal> = {};
@@ -50,20 +55,25 @@ export function createSignals(): Record<string, Signal> {
   for (let i = 0; i < STATIONS.length - 1; i++) {
     const station = STATIONS[i];
     const sectionId = order[i];
-    const isLast = i === STATIONS.length - 2; // Birkdale -> Southport
+    const isSouthportApproach = i === STATIONS.length - 2; // Birkdale -> Southport
+    const isControlledJunction = CONTROLLED_JUNCTION_STATION_IDS.includes(station.id);
     const id = `sig-${station.id}-up`;
     signals[id] = {
       id,
-      label: `${station.short}${isLast ? '-SOU' : ''}`,
+      label: `${station.short}${isSouthportApproach ? '-SOU' : ''}`,
       mile: station.mile,
       direction: 'up',
-      kind: isLast ? 'controlled' : 'auto',
+      kind: isSouthportApproach || isControlledJunction ? 'controlled' : 'auto',
       protects: sectionId,
       aspect: 'R',
     };
   }
 
   return signals;
+}
+
+export function isSouthportSignal(signal: Signal): boolean {
+  return signal.id === 'sig-bir-up';
 }
 
 /**
